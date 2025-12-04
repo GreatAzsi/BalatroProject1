@@ -1,0 +1,475 @@
+﻿<Window x:Class="BalatroWPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Balatro Style Board" Height="900" Width="1600" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Foreground="White">
+    <Window.Resources>
+        <!-- Make every Border rounded by default -->
+        <Style TargetType="Border">
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+
+        <!-- Ensure TextBlocks are white and at least 20pt by default -->
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="20"/>
+        </Style>
+
+        <Style x:Key="BigNumberStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="28"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <!-- small reusable box base (increased height for larger Hands/Discards) -->
+        <Style x:Key="SmallBoxBase" TargetType="Border">
+            <Setter Property="Height" Value="56"/>
+            <Setter Property="Padding" Value="6,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="CornerRadius" Value="8"/>
+        </Style>
+
+        <Style x:Key="BoxBlueStyle" TargetType="Border" BasedOn="{StaticResource SmallBoxBase}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#1fa0ff" Offset="0"/>
+                        <GradientStop Color="#0b65c5" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="BoxRedStyle" TargetType="Border" BasedOn="{StaticResource SmallBoxBase}">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#FF1B4E" Offset="0"/>
+                        <GradientStop Color="#FF1B4E" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TBYellowStyle" TargetType="TextBlock">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#ffb429" Offset="0"/>
+                        <GradientStop Color="#ffb329" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Rounded, larger yellow button template + defaults (applies to BtnYellowStyle uses) -->
+        <Style x:Key="BtnYellowStyle" TargetType="Button">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#ffb429" Offset="0"/>
+                        <GradientStop Color="#ffb329" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="10"
+                                SnapsToDevicePixels="True"
+                                BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TBRedStyle" TargetType="TextBlock">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#FF1B4E" Offset="0"/>
+                        <GradientStop Color="#FF1B4E" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="BtnRedStyle" TargetType="Button">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#FF1B4E" Offset="0"/>
+                        <GradientStop Color="#FF1B4E" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="20"/>
+        </Style>
+
+        <Style x:Key="TBBlueStyle" TargetType="TextBlock">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#1fa0ff" Offset="0"/>
+                        <GradientStop Color="#0b65c5" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="BtnBlueStyle" TargetType="Button">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#1fa0ff" Offset="0"/>
+                        <GradientStop Color="#0b65c5" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="20"/>
+        </Style>
+
+        <!-- Bottom meta text style (larger, bolder) -->
+        <Style x:Key="BottomMetaTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <RadialGradientBrush x:Key="ScreenBg" Center="0.5,0.5" GradientOrigin="0.5,0.5">
+            <GradientStop Color="#1C8B63" Offset="0"/>
+            <GradientStop Color="#0F5C45" Offset="0.55"/>
+            <GradientStop Color="#07402E" Offset="1"/>
+        </RadialGradientBrush>
+
+        <LinearGradientBrush x:Key="LeftPanelGrad" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="#08344A" Offset="0"/>
+            <GradientStop Color="#061F31" Offset="1"/>
+        </LinearGradientBrush>
+
+        <Style x:Key="PanelBoxStyle" TargetType="Border">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#103B56" Offset="0"/>
+                        <GradientStop Color="#0A2B3E" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Padding" Value="10,12"/>
+            <Setter Property="Margin" Value="0,5"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" Direction="270" ShadowDepth="3" BlurRadius="6" Opacity="0.4"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="CornerRadius" Value="10"/>
+        </Style>
+
+        <!-- New controls & card styles ported from HTML/CSS -->
+        <Style x:Key="UpgradesCardStyle" TargetType="Border">
+            <Setter Property="Width" Value="75"/>
+            <Setter Property="Height" Value="75"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#ffe6a3" Offset="0"/>
+                        <GradientStop Color="#ff4a73" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Margin" Value="4,0"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" Direction="270" ShadowDepth="3" BlurRadius="6" Opacity="0.5"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="PokerCardStyle" TargetType="Border">
+            <Setter Property="Width" Value="119"/>
+            <Setter Property="Height" Value="178.5"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" Direction="270" ShadowDepth="4" BlurRadius="6" Opacity="0.5"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="PokerCardBottomStyle" TargetType="Border" BasedOn="{StaticResource PokerCardStyle}">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="BorderBrush" Value="#000000"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <!-- Make the bottom bar square a bit lighter -->
+        <Style x:Key="BottomBarStyle" TargetType="Border">
+            <Setter Property="Background" Value="#F5F5F5"/>
+            <!-- lighter than previous #D3D3D3 -->
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+            <Setter Property="Margin" Value="0,0,0,18"/>
+        </Style>
+
+        <!-- Large control buttons - make them rounded via a ControlTemplate -->
+        <Style x:Key="ControlBtnLarge" TargetType="Button" BasedOn="{StaticResource BtnBlueStyle}">
+            <Setter Property="Width" Value="150"/>
+            <Setter Property="Height" Value="75"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="14"
+                                SnapsToDevicePixels="True"
+                                BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ControlBtnLargeRed" TargetType="Button" BasedOn="{StaticResource BtnRedStyle}">
+            <Setter Property="Width" Value="150"/>
+            <Setter Property="Height" Value="75"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="20"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="14"
+                                SnapsToDevicePixels="True"
+                                BorderThickness="0">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SortWrapperStyle" TargetType="Border">
+            <Setter Property="Background" Value="#f4f4f4"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" Direction="270" ShadowDepth="3" BlurRadius="4" Opacity="0.4"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SortTitleStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+
+        <Style x:Key="SortButtonSmall" TargetType="Button" BasedOn="{StaticResource BtnYellowStyle}">
+            <Setter Property="Width" Value="50"/>
+            <Setter Property="Height" Value="35"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Padding" Value="2"/>
+            <Setter Property="Foreground" Value="#3b2200"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#ffb329" Offset="0"/>
+                        <GradientStop Color="#ffb429" Offset="1"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </Window.Resources>
+    <Grid Background="{StaticResource ScreenBg}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="376"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Panel in Column 0 -->
+        <Border Grid.Column="0" Background="{StaticResource LeftPanelGrad}" BorderThickness="0,0,4,0" BorderBrush="#04202F" Padding="18,14" Margin="0,0,1,0">
+            <StackPanel Orientation="Vertical">
+                <!-- Title Box -->
+                <Border Style="{StaticResource PanelBoxStyle}">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#008AD9" Offset="0"/>
+                            <GradientStop Color="#00639F" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <TextBlock x:Name="TitleText" Text="Small Blind" FontSize="35" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,10"/>
+                </Border>
+
+                <!-- Score Box -->
+                <Border Style="{StaticResource PanelBoxStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Score at least" FontSize="20" FontWeight="Bold"  Margin="0,0,0,4"/>
+                        <TextBlock x:Name="BlindRequirementText" Text="1,400" Style="{StaticResource BigNumberStyle}"/>
+                        <TextBlock Text="to earn" FontWeight="Bold" FontSize="20"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Round Score -->
+                <Border Style="{StaticResource PanelBoxStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Round score" FontSize="20" FontWeight="Bold" Margin="0,0,0,4"/>
+                        <TextBlock x:Name="RoundScoreText" Text="0" Style="{StaticResource BigNumberStyle}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Flush Box (Horizontal Gradient) -->
+                <Border Style="{StaticResource PanelBoxStyle}">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#005F9B" Offset="0"/>
+                            <GradientStop Color="#FF1B4E" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock x:Name="FlushTypeText" Text="Flush " FontSize="24" FontWeight="Bold" Opacity="0.8" VerticalAlignment="Center" Width="214"/>
+                        <TextBlock x:Name="FlushNumberText" Text="0" FontSize="22" FontWeight="Bold" Margin="10,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="FlushMultText" Text="x0" FontSize="22" FontWeight="Bold" Foreground="#FFEF5B" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Run Info Button Column -->
+                <Border Style="{StaticResource PanelBoxStyle}">
+                    <StackPanel Orientation="Vertical">
+                        <Button Content="Run Info" Style="{StaticResource BtnYellowStyle}" Margin="0,4" FontWeight="Bold" Width="314" Height="44"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Hands/Discards KisButtons - Horizontal Layout -->
+                <Border Style="{StaticResource PanelBoxStyle}">
+                    <Grid Margin="0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Style="{StaticResource BoxBlueStyle}" Margin="0,0,2,0">
+                            <TextBlock x:Name="HandsText" Text="Hands 3" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="20" FontWeight="Bold"/>
+                        </Border>
+
+                        <Border Grid.Column="1" Style="{StaticResource BoxRedStyle}" Margin="2,0,0,0">
+                            <TextBlock x:Name="DiscardsText" Text="Discards 4" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="20" FontWeight="Bold"/>
+                        </Border>
+
+                    </Grid>
+                </Border>
+
+                <!-- Money Box -->
+                <Border Style="{StaticResource PanelBoxStyle}">
+                    <TextBlock x:Name="MoneyText" Text="7 $" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" Foreground="White"/>
+                </Border>
+
+                <!-- Bottom Meta: Options above, Ante and Round side-by-side below -->
+                <Border Style="{StaticResource PanelBoxStyle}" Padding="8,10">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+                        <!-- Larger, rounded Options button -->
+                        <Button Content="Options"
+                                Style="{StaticResource BtnYellowStyle}"
+                                HorizontalAlignment="Center"
+                                Margin="0,0,0,8"
+                                Width="314"
+                                Height="44"/>
+                        <!-- Ante and Round text, bigger and bolder -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock x:Name="AnteText" Text="Ante 3" Style="{StaticResource BottomMetaTextStyle}" Margin="0,0,20,0" Width="213"/>
+                            <TextBlock x:Name="RoundText" Text="Round 5" Style="{StaticResource BottomMetaTextStyle}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+        </Border>
+
+        <!-- Center Area in Column 1 -->
+        <Grid Grid.Column="1"  x:Name="CenterArea">
+            <!-- Upgrades row (top-right) -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,10,0">
+                <Border Style="{StaticResource UpgradesCardStyle}">
+                    <TextBlock Text="+5 Mult" Foreground="White" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Border>
+                <Border Style="{StaticResource UpgradesCardStyle}">
+                    <TextBlock Text="+50 Chipős" Foreground="White" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Border>
+                <Border Style="{StaticResource UpgradesCardStyle}">
+                    <TextBlock Text="+10 Mult" Foreground="White" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Border>
+                <Border Style="{StaticResource UpgradesCardStyle}">
+                    <TextBlock Text="+30 Chips" Foreground="White" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Border>
+                <Border Style="{StaticResource UpgradesCardStyle}">
+                    <TextBlock Text="+1 Mult" Foreground="White" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Border>
+            </StackPanel>
+
+            <!-- Board row (top cards) - populated by code -->
+            <StackPanel x:Name="BoardPanel" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,205,0,0">
+                <!-- cards will be added here dynamically -->
+            </StackPanel>
+
+            <!-- Bottom hand wrapper (player hand) -->
+            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,220,0,0">
+                <StackPanel x:Name="PlayerHandPanel" Orientation="Horizontal">
+                    <!-- player cards will be added here dynamically -->
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Bottom bar overlay (centered at bottom) -->
+            <Border Style="{StaticResource BottomBarStyle}" HorizontalAlignment="Center" VerticalAlignment="Bottom">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" >
+                    <Button x:Name="PlayHandButton" Content="Play Hand" Style="{StaticResource ControlBtnLarge}" Margin="8,0"/>
+                    <Border Style="{StaticResource SortWrapperStyle}" Margin="8,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="Sort Hand" Style="{StaticResource SortTitleStyle}" HorizontalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Content="Rank" Style="{StaticResource SortButtonSmall}" Margin="2,0"/>
+                                <Button Content="Suit" Style="{StaticResource SortButtonSmall}" Margin="2,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Button x:Name="DiscardButton" Content="Discard" Style="{StaticResource ControlBtnLargeRed}" Margin="8,0"/>
+                </StackPanel>
+            </Border>
+
+        </Grid>
+    </Grid>
+    <!-- Bottom Bar as Canvas overlay -->
+</Window>
+
