@@ -41,7 +41,7 @@ namespace Balbasztro
         public string Suit { get; }
         // Chips is the scoring value used for high-card scoring (Ace = 11)
         public int Chips { get; }
-        // RankValue is the canonical numeric rank used for straights & comparisons (Ace = 14)
+        // RankValue is the numeric rank used for straights & comparisons (Ace = 14)
         public int RankValue { get; }
         public int Mult { get; set; }
         public bool Played { get; set; }
@@ -56,7 +56,7 @@ namespace Balbasztro
             Played = false;
         }
 
-        // ToString override
+
         public override string ToString()
         {
             return $"{Rank} of {Suit} (Chips:{Chips}, RankValue:{RankValue}, Mult:{Mult})";
@@ -68,18 +68,18 @@ namespace Balbasztro
     // ============================================================
     public class Deck
     {
-        private readonly List<Card> cards;
-        private static readonly string[] Ranks =
+        public List<Card> cards;
+        public static string[] Ranks =
             { "Ace", "King", "Queen", "Jack", "10", "9", "8", "7", "6", "5", "4", "3", "2" };
 
-        private static readonly string[] Suits = { "Spades", "Hearts", "Clubs", "Diamonds" };
-        private readonly Random rng;
+        public static string[] Suits = { "Spades", "Hearts", "Clubs", "Diamonds" };
+        public Random rng;
 
-        // Chips used for scoring (Ace=11 so high-card = base + 11 -> 16)
-        private static readonly int[] RankChipValues = { 11, 10, 10, 10, 10, 9, 8, 7, 6, 5, 4, 3, 2 };
+        // Chips used for scoring (Ace=11)
+        public static int[] RankChipValues = { 11, 10, 10, 10, 10, 9, 8, 7, 6, 5, 4, 3, 2 };
 
-        // Rank numeric values used for straight detection and comparisons (Ace high = 14)
-        private static readonly int[] RankNumericValues = { 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2 };
+        // Rank numeric values used for straight detection and comparisons 
+        public static int[] RankNumericValues = { 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2 };
 
         public Deck()
         {
@@ -88,20 +88,20 @@ namespace Balbasztro
             Generate();
         }
 
-        private void Generate()
+       
+        public void Generate()
         {
             cards.Clear();
             for (int s = 0; s < Suits.Length; s++)
             {
                 for (int r = 0; r < Ranks.Length; r++)
                 {
-                    // pass both chip value and numeric rank value to the Card
+                    // give both chip value and numeric rank value to the Card
                     cards.Add(new Card(Ranks[r], Suits[s], RankChipValues[r], RankNumericValues[r], 0));
                 }
             }
         }
 
-        // Fisher-Yates shuffle
         public void Shuffle()
         {
             int n = cards.Count;
@@ -135,28 +135,28 @@ namespace Balbasztro
         public List<Card> PlayerHand { get; private set; } = new List<Card>();
 
         // lifetime trackers
-        public int BlindRequirement { get; private set; } = 300;
+        public double BlindRequirement { get; private set; } = 300;
         public int TotalChips { get; private set; } = 0; // lifetime raw chips earned (for stats)
         public int TotalMult { get; private set; } = 1;  // lifetime multiplier (for stats)
 
-        // player wallet updated at round end
+        // player money updated at round end
         public int Money { get; private set; } = 0;
 
         // track rounds, ante, and per-round usage
         public int RoundNumber { get; private set; } = 0;
         public int Ante { get; private set; } = 1;
 
-        private const int DefaultPlaysPerRound = 4;
-        private const int DefaultDiscardsPerRound = 3;
+        public const int DefaultPlaysPerRound = 4;
+        public const int DefaultDiscardsPerRound = 3;
 
         public int PlaysLeft { get; private set; } = DefaultPlaysPerRound;
         public int DiscardsLeft { get; private set; } = DefaultDiscardsPerRound;
 
-        // Per-round accumulation: store already-multiplied contributions
-        private int roundChips = 0;
-        private int roundMult = 1;
+        // Per-round accumulation: store already multiplied contributions
+        public int roundChips = 0;
+        public int roundMult = 1;
 
-        // CurrentScore returns the accumulated round score (already includes per-play multipliers)
+        // CurrentScore returns the accumulated round score 
         public int CurrentScore => roundChips;
 
         public Game()
@@ -167,20 +167,18 @@ namespace Balbasztro
         // start a fresh round
         public void StartNewRound()
         {
-            // increment round count (first call from ctor will set RoundNumber = 1)
+            // increment round count
             RoundNumber++;
 
-            // award end-of-round payout for the previous round (do not award on the very first StartNewRound)
+            // award end-of-round payout for the previous round 
             if (RoundNumber > 1)
             {
-                // payout formula: 3 + (hands left * 3)
-                // PlaysLeft still holds the remaining hands from the previous round at this point
                 int payout = 3 + (PlaysLeft * 3);
                 Money += payout;
             }
 
-            // every 3rd round increase the ante by 1 (rounds 3,6,9,...)
-            if (RoundNumber % 3 == 0)
+            // every 4th round increase the ante by 1 (rounds 4,8,12,...)
+            if (RoundNumber % 4 == 0)
             {
                 Ante++;
             }
@@ -198,7 +196,8 @@ namespace Balbasztro
             PlayerHand = Deck.DrawCards(9);
         }
 
-        // reset the player's progress back to round 1 (loss condition)
+        // reset the player's progress back to round 1 (loss condition) 
+        // Not Implemented Yet 
         public void ResetToRoundOne()
         {
             RoundNumber = 0;
@@ -259,7 +258,7 @@ namespace Balbasztro
         }
 
         // Remove played/discarded cards safely
-        private void RemovePlayedCards(IEnumerable<Card> cards)
+        public void RemovePlayedCards(IEnumerable<Card> cards)
         {
             foreach (var c in cards.ToList())
             {
@@ -302,7 +301,7 @@ namespace Balbasztro
         }
 
         // helper: detect straight (consecutive ints), supports Ace-high and Ace-low
-        private bool IsStraight(List<int> ranks)
+        public bool IsStraight(List<int> ranks)
         {
             if (ranks == null || ranks.Count < 5) return false;
 
@@ -342,7 +341,7 @@ namespace Balbasztro
         }
 
         // map rank string to numeric for sorting tie-breakers (correct mapping)
-        private int RankToNumeric(string rank)
+        public int RankToNumeric(string rank)
         {
             switch (rank)
             {
@@ -395,12 +394,12 @@ namespace Balbasztro
             roundChips += gained;
             roundMult *= Math.Max(1, combinedMult);
 
-            int score = CurrentScore;
+            double score = CurrentScore;
             bool beat = score >= BlindRequirement;
             if (beat)
             {
                 // increase blind (game difficulty)
-                BlindRequirement += 30;
+               BlindRequirement *= 1.15;
             }
             else
             {
