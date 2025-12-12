@@ -5,33 +5,58 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Balbasztro; // ensure Game, Card classes are in this namespace
+using System.Collections.Specialized;
+using Balbasztro; // ensure Game, Card, Upgrade classes are in this namespace
 
 namespace BalatroWPF
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         private Game game;
         private List<int> selectedIndexes = new List<int>();
         private List<Balbasztro.Card> lastPlayedCards = new List<Balbasztro.Card>();
         private int roundStartScore = 0;
-
+        private bool upgradeDialogOpen = false; // Track if upgrade dialog is open
 
         public MainWindow()
         {
             InitializeComponent();
 
+            // ensure there is a game singleton
+            if (Balbasztro.Game.Instance == null)
+                game = new Balbasztro.Game();
+            else
+                game = Balbasztro.Game.Instance;
+
+            // Bind OwnedUpgradesControl to the game's collection so UI updates when upgrades are added.
+            // Also set DataContext -> allows XAML bindings (if any) to the game
+            this.DataContext = game;
+            OwnedUpgradesControl.ItemsSource = game.OwnedUpgrades;
+            // toggle visibility when collection changes
+            game.OwnedUpgrades.CollectionChanged += OwnedUpgrades_CollectionChanged;
+            // initial visibility
+            OwnedUpgradesControl.Visibility = game.OwnedUpgrades.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
             // wire up buttons
             PlayHandButton.Click += PlayHandButton_Click;
             DiscardButton.Click += DiscardButton_Click;
+            // removed OpenUpgradesBtn click wiring — upgrades are shown inline now
 
-            // start game
-            game = new Game();
+            // subscribe to in-game upgrade choices event to show choices inline / modal
+            game.UpgradeChoicesAvailable += OnUpgradeChoicesAvailable;
+
+                    // start game
             roundStartScore = game.CurrentScore;
             RefreshUI();
+        }
+
+        private void OwnedUpgrades_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            // ensure UI thread
+            Dispatcher.Invoke(() =>
+            {
+                OwnedUpgradesControl.Visibility = game.OwnedUpgrades.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            });
         }
 
         // refresh all UI elements
@@ -259,12 +284,21 @@ namespace BalatroWPF
                 // reset selection
                 selectedIndexes.Clear();
 
-                // if beat blind -> start new round (follow console logic)
-                if (result.beatBlind)
+                // If the round ended and player lost — start immediately
+                if (game.PlaysLeft <= 0 && !result.beatBlind)
                 {
-                    // automatically start next round
                     game.StartNewRound();
                     roundStartScore = game.CurrentScore;
+                }
+
+                // FALLBACK: If the round ended and player won but the UI did not show the choices
+                // (possible race where Game raised event before UI subscribed/ready), open chooser here.
+                if (game.PlaysLeft <= 0 && result.beatBlind && !upgradeDialogOpen)
+                {
+                    // get the exact choices from the game as a fallback and show them
+                    var fallbackChoices = game.GetChoices(3);
+                    OnUpgradeChoicesAvailable(fallbackChoices);
+                    // OnUpgradeChoicesAvailable will StartNewRound() after dialog completes
                 }
 
                 // update UI after changes
@@ -313,11 +347,83 @@ namespace BalatroWPF
             }
         }
 
+        // ---- Inline / modal upgrade choices handling (replaces separate UpgradesWindow) ----
+
+        // Called when the Game signals upgrade choices are available
+        private void OnUpgradeChoicesAvailable(List<Balbasztro.Upgrade> choices)
+        {
+            // ensure UI thread
+            Dispatcher.Invoke(() =>
+            {
+                // guard so we don't open the dialog twice in a race
+                if (upgradeDialogOpen) return;
+                upgradeDialogOpen = true;
+                try
+                {
+                    // Ensure UI reflects the payout (money, score, etc.) BEFORE showing the modal.
+                    // Game.EndRound already updated Money; RefreshUI makes the change visible to the player.
+                    RefreshUI();
+                    // force layout update so textblocks are rendered before dialog steals focus
+                    UpdateLayout();
+
+                    // show modal with the exact choices produced by the Game
+                    var dlg = new UpgradesWindow(choices) { Owner = this };
+                    bool? res = dlg.ShowDialog();
+
+                    // After dialog completes (either chosen or skipped) start the next round.
+                    // UpgradesWindow performs PurchaseUpgrade when Buy is clicked.
+                    game.StartNewRound();
+                    roundStartScore = game.CurrentScore;
+
+                    // ensure inline panel is cleared & hidden (defensive)
+                    if (UpgradeChoicesPanel != null)
+                    {
+                        UpgradeChoicesPanel.Children.Clear();
+                        UpgradeChoicesPanel.Visibility = Visibility.Collapsed;
+                    }
+
+                    RefreshUI();
+                }
+                finally
+                {
+                    upgradeDialogOpen = false;
+                }
+            });
+        }
+
+        // handle clicking a square — free purchase because this flow is for winning the round
+        // (kept for backward compatibility if inline approach is used elsewhere)
+        private void UpgradeSquare_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!(sender is Border b) || !(b.Tag is Balbasztro.Upgrade u)) return;
+
+            var ok = game.PurchaseUpgrade(u, free: true);
+            if (!ok)
+            {
+                MessageBox.Show("Could not apply upgrade.");
+                return;
+            }
+
+            // close the choices UI and start the next round (player chose one upgrade)
+            UpgradeChoicesPanel.Children.Clear();
+            UpgradeChoicesPanel.Visibility = Visibility.Collapsed;
+
+            // start next round now that choice is made
+            game.StartNewRound();
+            roundStartScore = game.CurrentScore;
+
+            // refresh UI so OwnedUpgrades / Money / hand reflect the change
+            RefreshUI();
+        }
+
         // helper: capitalize first char for nicer UI (e.g. "royal flush" -> "Royal flush")
         private string CultureInfoAwareCap(string s)
         {
             if (string.IsNullOrEmpty(s)) return s;
             return char.ToUpperInvariant(s[0]) + s.Substring(1);
         }
+
+        public void ShowOwnedUpgrades() => OwnedUpgradesControl.Visibility = System.Windows.Visibility.Visible;
+        public void HideOwnedUpgrades() => OwnedUpgradesControl.Visibility = System.Windows.Visibility.Collapsed;
     }
 }
