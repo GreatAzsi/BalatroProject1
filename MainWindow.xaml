@@ -140,7 +140,7 @@
             <Setter Property="FontSize" Value="20"/>
         </Style>
 
-        <!-- Bottom meta text style (larger, bolder) -->
+        <!-- Bottom meta text style -->
         <Style x:Key="BottomMetaTextStyle" TargetType="TextBlock">
             <Setter Property="FontSize" Value="20"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -178,7 +178,7 @@
             <Setter Property="CornerRadius" Value="10"/>
         </Style>
 
-        <!-- New controls & card styles ported from HTML/CSS -->
+        
         <Style x:Key="UpgradesCardStyle" TargetType="Border">
             <Setter Property="Width" Value="75"/>
             <Setter Property="Height" Value="75"/>
@@ -222,10 +222,10 @@
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
 
-        <!-- Make the bottom bar square a bit lighter -->
+        
         <Style x:Key="BottomBarStyle" TargetType="Border">
             <Setter Property="Background" Value="#F5F5F5"/>
-            <!-- lighter than previous #D3D3D3 -->
+       
             <Setter Property="Padding" Value="10"/>
             <Setter Property="CornerRadius" Value="10"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -233,7 +233,7 @@
             <Setter Property="Margin" Value="0,0,0,18"/>
         </Style>
 
-        <!-- Large control buttons - make them rounded via a ControlTemplate -->
+        
         <Style x:Key="ControlBtnLarge" TargetType="Button" BasedOn="{StaticResource BtnBlueStyle}">
             <Setter Property="Width" Value="150"/>
             <Setter Property="Height" Value="75"/>
@@ -407,7 +407,7 @@
                                 Margin="0,0,0,8"
                                 Width="314"
                                 Height="44"/>
-                        <!-- Ante and Round text, bigger and bolder -->
+                        <!-- Ante and Round text -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <TextBlock x:Name="AnteText" Text="Ante 3" Style="{StaticResource BottomMetaTextStyle}" Margin="0,0,20,0" Width="213"/>
                             <TextBlock x:Name="RoundText" Text="Round 5" Style="{StaticResource BottomMetaTextStyle}"/>
@@ -448,7 +448,7 @@
                 </ItemsControl>
             </StackPanel>
 
-            <!-- add this somewhere inside your main layout (e.g. Grid) so upgrades appear top-right -->
+            
             <StackPanel x:Name="UpgradeChoicesPanel"
             Orientation="Horizontal"
             HorizontalAlignment="Right"

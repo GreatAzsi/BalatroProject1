@@ -10,8 +10,7 @@ namespace Balbasztro
     // ============================================================
     public static class Parser
     {
-        // Parse indexes from a string like "0,1,4"
-        // returns unique indexes in the order they appeared (validated later)
+        
         public static int[] ParseIndexes(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -34,7 +33,7 @@ namespace Balbasztro
     }
 
     // ============================================================
-    // Upgrade model
+    // Upgrades
     // ============================================================
     public class Upgrade
     {
@@ -42,19 +41,13 @@ namespace Balbasztro
         public string Name { get; }
         public string Description { get; }
         public int Cost { get; }
-        // optional gameplay effects (example)
         public int AddChips { get; }
         public int AddMult { get; }
-
-        // Optional target suit — if non-null, the upgrade applies only to cards of that suit.
-        // Example: "Spades"
         public string TargetSuit { get; }
-
-        // Optional target rank — if non-null, the upgrade applies only to cards of that rank.
-        // Example: "Jack", "Queen"
         public string TargetRank { get; }
+        public string TargetHandType { get; }
 
-        public Upgrade(string id, string name, string description, int cost, int addChips = 0, int addMult = 0, string targetSuit = null, string targetRank = null)
+        public Upgrade(string id, string name, string description, int cost, int addChips = 0, int addMult = 0, string targetSuit = null, string targetRank = null, string targetHandType = null)
         {
             Id = id;
             Name = name;
@@ -64,13 +57,14 @@ namespace Balbasztro
             AddMult = addMult;
             TargetSuit = targetSuit;
             TargetRank = targetRank;
+            TargetHandType = targetHandType;
         }
 
         public override string ToString() => $"{Name} ({Cost}$)";
     }
 
     // ============================================================
-    // Card class
+    // Cards
     // ============================================================
     public class Card
     {
@@ -101,7 +95,7 @@ namespace Balbasztro
     }
 
     // ============================================================
-    // Deck class
+    // Deck
     // ============================================================
     public class Deck
     {
@@ -110,12 +104,11 @@ namespace Balbasztro
             { "Ace", "King", "Queen", "Jack", "10", "9", "8", "7", "6", "5", "4", "3", "2" };
 
         public static string[] Suits = { "Spades", "Hearts", "Clubs", "Diamonds" };
-        public Random rng;
 
-        // Chips used for scoring (Ace=11)
+        public Random rng;
+       
         public static int[] RankChipValues = { 11, 10, 10, 10, 10, 9, 8, 7, 6, 5, 4, 3, 2 };
 
-        // Rank numeric values used for straight detection and comparisons 
         public static int[] RankNumericValues = { 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2 };
 
         public Deck()
@@ -132,7 +125,7 @@ namespace Balbasztro
             {
                 for (int r = 0; r < Ranks.Length; r++)
                 {
-                    // give both chip value and numeric rank value to the Card
+                    
                     cards.Add(new Card(Ranks[r], Suits[s], RankChipValues[r], RankNumericValues[r], 0));
                 }
             }
@@ -150,7 +143,7 @@ namespace Balbasztro
             }
         }
 
-        // Draw specified count (returns a new list)
+        
         public List<Card> DrawCards(int count)
         {
             if (count <= 0) return new List<Card>();
@@ -163,11 +156,10 @@ namespace Balbasztro
     }
 
     // ============================================================
-    // Game class (core logic)
+    // Game class 
     // ============================================================
     public class Game
     {
-        // singleton instance to simplify UI wiring
         public static Game Instance { get; private set; }
 
         public Deck Deck { get; private set; }
@@ -175,13 +167,11 @@ namespace Balbasztro
 
         // lifetime trackers
         public double BlindRequirement { get; private set; } = 300;
-        public int TotalChips { get; private set; } = 0; // lifetime raw chips earned (for stats)
-        public int TotalMult { get; private set; } = 1;  // lifetime multiplier (for stats)
+        public int TotalChips { get; private set; } = 0; 
+        public int TotalMult { get; private set; } = 1;  
 
-        // player money updated at round end
+        // player money
         public int Money { get; private set; } = 0;
-
-        // track rounds, ante, and per-round usage
         public int RoundNumber { get; private set; } = 0;
         public int Ante { get; private set; } = 1;
 
@@ -191,35 +181,45 @@ namespace Balbasztro
         public int PlaysLeft { get; private set; } = DefaultPlaysPerRound;
         public int DiscardsLeft { get; private set; } = DefaultDiscardsPerRound;
 
-        // Per-round accumulation: store already multiplied contributions
         public int roundChips = 0;
         public int roundMult = 1;
 
-        // CurrentScore returns the accumulated round score 
+        
         public int CurrentScore => roundChips;
 
-        // Owned upgrades (observable so UI can bind / observe)
+        
         public ObservableCollection<Upgrade> OwnedUpgrades { get; } = new ObservableCollection<Upgrade>();
 
-        // Pool of possible upgrades (editable)
+        //Upgrades
         public static List<Upgrade> AvailableUpgrades = new List<Upgrade>
-        {
-            //new Upgrade("chip+50", "+50 Chips", "Grants +50 chips bonus to plays (adds to chips sum)", 12, addChips: 50),
-            //new Upgrade("mult+1", "+1 Mult", "Adds +1 to combined multiplier", 10, addMult: 1),
-            //new Upgrade("hands+1", "+1 Hand", "Gives one extra play this round", 20),
-            //new Upgrade("chip+10", "+10 Chips", "Adds +10 chips to sums", 12, addChips: 10),
-            new Upgrade("mult+2", "+2 Mult", "Adds +2 to combined multiplier", 10, addMult: 2),
+        {   
+            new Upgrade("mult+4", "Joker", "Adds +4 to combined multiplier", 2, addMult: 4),
 
-            // Spade-targeted upgrade: +50 chips per Spade card in the played selection
-            new Upgrade("spade+50", "Spade +50", "Grants +50 chips to Spade cards (applies per Spade in selection)", 1, addChips: 50, addMult: 0, targetSuit: "Spades"),
+            new Upgrade("Diamond +3 Mult", "Greedy Joker", "Played cards with Diamond suit give +3 Mult when scored", 5, addChips: 0, addMult: 3, targetSuit: "Diamonds"),
+            new Upgrade("Heart +3 Mult", "Lusty Joker", "Played cards with Heart suit give +3 Mult when scored", 5, addChips: 0, addMult: 3, targetSuit: "Hearts"),
+            new Upgrade("Spade +3 Mult", "Wrathful Joker", "Played cards with Spade suit give +3 Mult when scored", 5, addChips: 0, addMult: 3, targetSuit: "Spades"),
+            new Upgrade("Club +3 Mult", "Gluttonous Joker", "Played cards with Club suit give +3 Mult when scored", 5, addChips: 0, addMult: 3, targetSuit: "Clubs"),
+            new Upgrade("Spade +50 Chips", "Arrowhead", "Played cards with Spade suit give +50 Chips when scored", 7, addChips: 50, addMult: 0, targetSuit: "Spades"),
+            new Upgrade("Club +7 Mult", "Onyx Agate", "Played cards with Club suit give +7 Mult when scored", 5, addChips: 0, addMult: 7, targetSuit: "Clubs"),
 
-            // Rank-targeted example: +50 chips for Jacks only (per Jack in selection)
-            new Upgrade("jack+50", "Jack +50", "Grants +50 chips to Jack cards (applies per Jack in selection)", 1, addChips: 50, addMult: 0, targetSuit: null, targetRank: "Jack")
+            new Upgrade("Ace +20 Chips +4 Mult", "Scholar", "Played Aces give +20 Chips and +4 Mult when scored", 4, addChips: 20, addMult: 4, targetHandType: "flush"),
+
+            new Upgrade("Pair +8 Mult", "Jolly Joker", "Grants +8 mult when you play a Pair", 3, addChips: 0, addMult: 8, targetSuit: null, targetRank: null, targetHandType: "pair"),
+            new Upgrade("Two Pair +10 Mult", "Mad Joker", "Grants +10 mult when you play Two Pair", 4, addChips: 0, addMult: 10, targetHandType: "two pair"),
+            new Upgrade("Three of a kind +12 Mult", "Zany Joker", "Grants +12 mult when you play a Three of a kind", 4, addChips: 0, addMult: 12, targetSuit: null, targetRank: null, targetHandType: "three of a kind"),
+            new Upgrade("Straight +12 Mult", "Crazy Joker", "Grants +12 mult when you play a Straight", 4, addChips: 0, addMult: 12, targetSuit: null, targetRank: null, targetHandType: "straight"),
+            new Upgrade("Flush +10 Mult", "Droll Joker", "Grants +10 mult when you play Flush", 4, addChips: 0, addMult: 10, targetHandType: "flush"),
+
+            new Upgrade("Pair +50 Chips", "Sly Joker", "Grants +50 Chips when you play a Pair", 3, addChips: 50, addMult: 0, targetSuit: null, targetRank: null, targetHandType: "pair"),
+            new Upgrade("Two Pair +80 Chips", "Clever joker", "Grants +50 Chips when you play a Two Pair", 4, addChips: 80, addMult: 0, targetSuit: null, targetRank: null, targetHandType: "pair"),
+            new Upgrade("Three of a kind +100 Chips", "Wily Joker", "Grants +100 Chips when you play a Three of a kind", 4, addChips: 100, addMult: 0, targetSuit: null, targetRank: null, targetHandType: "three of a kind"),
+            new Upgrade("Straight +100 Chips", "Devious Joker", "Grants +100 Chips when you play a Straight", 4, addChips: 100, addMult: 0, targetSuit: null, targetRank: null, targetHandType: "straight"),
+            new Upgrade("Flush +80 Chips", "Crafty Joker", "Grants +80 Chips when you play Flush", 4, addChips: 80, addMult: 0, targetHandType: "flush"),
         };
 
         private readonly Random rnd = new Random();
 
-        // event raised when upgrade choices are available at end of round
+        
         public event Action<List<Upgrade>> UpgradeChoicesAvailable;
 
         public Game()
@@ -243,7 +243,7 @@ namespace Balbasztro
         }
 
         // attempt to purchase upgrade; returns true on success
-        // optionally allow free purchases (useful when granting upgrades after a win)
+        // optionally allow free purchases (useful for testing)
         public bool PurchaseUpgrade(Upgrade u, bool free = false)
         {
             if (u == null) return false;
@@ -258,22 +258,17 @@ namespace Balbasztro
             if (u.AddChips != 0) TotalChips += u.AddChips;
             if (u.AddMult != 0) TotalMult += u.AddMult;
 
-            // NOTE:
-            // Suit- or rank-targeted upgrades are applied during PlayCards per-card,
-            // so we don't apply suit/rank-specific chips here at purchase time.
-
             return true;
         }
 
-        // called when a round ends (plays exhausted) to pay out and raise upgrade UI
-        // now accepts whether the round was won (beat the blind); only show upgrades on win
+        
         public void EndRound(bool won)
         {
-            // payout formula: 3 + (hands left * 3) - at end PlaysLeft usually zero
+            
             int payout = 3 + (PlaysLeft * 3);
             Money += payout;
 
-            // raise event with choices only when player won the round
+            
             if (won)
             {
                 var choices = GetChoices(3);
@@ -284,20 +279,20 @@ namespace Balbasztro
         // start a fresh round (call this after upgrades dialog is handled)
         public void StartNewRound()
         {
-            // increment round count
+            
             RoundNumber++;
 
-            // every 4th round increase the ante by 1 (rounds 4,8,12,...)
+            
             if (RoundNumber % 4 == 0)
             {
                 Ante++;
             }
 
-            // reset per-round counters
+            
             PlaysLeft = DefaultPlaysPerRound;
             DiscardsLeft = DefaultDiscardsPerRound;
 
-            // reset per-round accumulators
+            
             roundChips = 0;
             roundMult = 1;
 
@@ -306,7 +301,7 @@ namespace Balbasztro
             PlayerHand = Deck.DrawCards(9);
         }
 
-        // reset the player's progress back to round 1 (loss condition) 
+        
         public void ResetToRoundOne()
         {
             RoundNumber = 0;
@@ -322,7 +317,7 @@ namespace Balbasztro
             StartNewRound();
         }
 
-        // refill hand to 9 cards
+        
         public void RefillHand()
         {
             int missing = 9 - PlayerHand.Count;
@@ -330,8 +325,7 @@ namespace Balbasztro
                 PlayerHand.AddRange(Deck.DrawCards(missing));
         }
 
-        // Validate a selection of indexes:
-        // returns (isValid, error message)
+        
         public (bool isValid, string error) ValidateSelection(int[] indexes)
         {
             if (indexes == null || indexes.Length == 0)
@@ -366,7 +360,7 @@ namespace Balbasztro
             return selected;
         }
 
-        // Remove played/discarded cards safely
+        // Remove played/discarded cards
         public void RemovePlayedCards(IEnumerable<Card> cards)
         {
             foreach (var c in cards.ToList())
@@ -375,8 +369,8 @@ namespace Balbasztro
             }
         }
 
-        // Evaluate best hand within the selected cards (simple poker-like evaluator)
-        // returns (handType, baseChips, baseMult)
+        // Select best hand within the selected cards (simple poker-like evaluator)
+        
         public (string handType, int baseChips, int baseMult) EvaluateHand(List<Card> selected)
         {
             var groups = selected.GroupBy(c => c.Rank)
@@ -385,7 +379,6 @@ namespace Balbasztro
                                  .ThenByDescending(g => RankToNumeric(g.Rank))
                                  .ToList();
 
-            // all suits and rank values for general checks
             var suits = selected.Select(c => c.Suit).ToList();
             var ranks = selected.Select(c => c.RankValue).OrderBy(x => x).ToList();
 
@@ -464,7 +457,7 @@ namespace Balbasztro
             return false;
         }
 
-        // map rank string to numeric for sorting tie-breakers (correct mapping)
+        
         public int RankToNumeric(string rank)
         {
             switch (rank)
@@ -477,32 +470,33 @@ namespace Balbasztro
             }
         }
 
-        // Play cards: scoring updated to support suit- and rank-targeted upgrades.
-        // final gained = (baseHandChips + sum(card.Chips) + globalUpgradesChips + sum(per-card suitUpgrades) + sum(per-card rankUpgrades)) *
-        //                (baseHandMult + sum(card.Mult) + globalUpgradesMult + sum(per-card suitUpgradesMult) + sum(per-card rankUpgradesMult))
+        // Play cards: scoring updated to support suit-, rank- and hand-type-targeted upgrades.
+        // final gained = (baseHandChips + sum(card.Chips) + globalUpgradesChips + sum(per-card suitUpgrades) + sum(per-card rankUpgrades) + handTypeUpgrades) *
+        //                (baseHandMult + sum(card.Mult) + globalUpgradesMult + sum(per-card suitUpgradesMult) + sum(per-card rankUpgradesMult) + handTypeUpgradesMult)
         public (bool beatBlind, string handType, int baseChips, int baseMult, int gained) PlayCards(int[] indexes)
         {
             if (PlaysLeft <= 0)
                 throw new InvalidOperationException("No plays left this round.");
 
-            // consume a play
+            
             PlaysLeft--;
 
-            // select and validate
+            
             var selected = SelectCards(indexes);
 
-            // evaluate best hand inside the selected cards (only those selected matter)
+            
             var (handType, baseChips, baseMult) = EvaluateHand(selected);
 
-            // Sum chips from selected cards (not max)
+            
             int sumCardChips = selected.Any() ? selected.Sum(c => c.Chips) : 0;
-            // Sum card multipliers (Card.Mult defaults to 0)
+            
             int cardMultSum = selected.Sum(c => c.Mult);
 
-            // Owned upgrades: split into global (no target), suit-targeted and rank-targeted
-            var globalUpgrades = OwnedUpgrades.Where(u => string.IsNullOrEmpty(u.TargetSuit) && string.IsNullOrEmpty(u.TargetRank)).ToList();
+            
+            var globalUpgrades = OwnedUpgrades.Where(u => string.IsNullOrEmpty(u.TargetSuit) && string.IsNullOrEmpty(u.TargetRank) && string.IsNullOrEmpty(u.TargetHandType)).ToList();
             var suitTargeted = OwnedUpgrades.Where(u => !string.IsNullOrEmpty(u.TargetSuit)).ToList();
             var rankTargeted = OwnedUpgrades.Where(u => !string.IsNullOrEmpty(u.TargetRank)).ToList();
+            var handTypeTargeted = OwnedUpgrades.Where(u => !string.IsNullOrEmpty(u.TargetHandType)).ToList();
 
             int globalUpgradesChips = globalUpgrades.Any() ? globalUpgrades.Sum(u => u.AddChips) : 0;
             int globalUpgradesMult = globalUpgrades.Any() ? globalUpgrades.Sum(u => u.AddMult) : 0;
@@ -537,11 +531,24 @@ namespace Balbasztro
                 }
             }
 
-            // Combined multiplier:
-            int combinedMult = baseMult + cardMultSum + globalUpgradesMult + suitSpecificMult + rankSpecificMult;
+            // Hand-type targeted upgrades apply once per play if the evaluated handType matches the upgrade's TargetHandType.
+            int handTypeChips = 0;
+            int handTypeMult = 0;
+            if (!string.IsNullOrEmpty(handType) && handTypeTargeted.Any())
+            {
+                var matching = handTypeTargeted.Where(u => string.Equals(u.TargetHandType, handType, StringComparison.OrdinalIgnoreCase));
+                if (matching.Any())
+                {
+                    handTypeChips = matching.Sum(u => u.AddChips);
+                    handTypeMult = matching.Sum(u => u.AddMult);
+                }
+            }
 
-            // Pre-multiply subtotal: base hand chips + sum of chips from cards + global upgrades + suit-specific chips + rank-specific chips (per matching card)
-            int preMultiply = baseChips + sumCardChips + globalUpgradesChips + suitSpecificChips + rankSpecificChips;
+            // Combined multiplier:
+            int combinedMult = baseMult + cardMultSum + globalUpgradesMult + suitSpecificMult + rankSpecificMult + handTypeMult;
+
+            // Pre-multiply subtotal: base hand chips + sum of chips from cards + global upgrades + suit-specific chips + rank-specific chips + hand-type chips
+            int preMultiply = baseChips + sumCardChips + globalUpgradesChips + suitSpecificChips + rankSpecificChips + handTypeChips;
 
             // Final gained value after applying the combined multiplier
             int gained = preMultiply * combinedMult;
@@ -549,7 +556,7 @@ namespace Balbasztro
             // Remove cards from hand
             RemovePlayedCards(selected);
 
-            // Update lifetime stats: raw chips is hand + cards + global + suit/rank-specific (counted once per play)
+            // Update lifetime stats: raw chips is hand + cards + global + suit/rank/hand-type specific (counted once per play)
             TotalChips += preMultiply;
             // Update lifetime multiplier stat (avoid zero product)
             TotalMult *= Math.Max(1, combinedMult);
@@ -558,7 +565,7 @@ namespace Balbasztro
             roundChips += gained;
             roundMult *= Math.Max(1, combinedMult);
 
-            // evaluate whether player beat the blind now (use updated roundChips)
+            // evaluate whether player beat the blind now 
             double score = CurrentScore;
             bool beat = score >= BlindRequirement;
 

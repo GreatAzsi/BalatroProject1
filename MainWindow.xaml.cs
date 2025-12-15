@@ -22,7 +22,7 @@ namespace BalatroWPF
         {
             InitializeComponent();
 
-            // ensure there is a game singleton
+            // ensure there is a game
             if (Balbasztro.Game.Instance == null)
                 game = new Balbasztro.Game();
             else
@@ -292,7 +292,7 @@ namespace BalatroWPF
                 }
 
                 // FALLBACK: If the round ended and player won but the UI did not show the choices
-                // (possible race where Game raised event before UI subscribed/ready), open chooser here.
+                
                 if (game.PlaysLeft <= 0 && result.beatBlind && !upgradeDialogOpen)
                 {
                     // get the exact choices from the game as a fallback and show them
@@ -347,7 +347,7 @@ namespace BalatroWPF
             }
         }
 
-        // ---- Inline / modal upgrade choices handling (replaces separate UpgradesWindow) ----
+        //  Inline / modal upgrade choices handling  
 
         // Called when the Game signals upgrade choices are available
         private void OnUpgradeChoicesAvailable(List<Balbasztro.Upgrade> choices)
